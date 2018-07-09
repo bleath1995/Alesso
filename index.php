@@ -1,3 +1,76 @@
+<?php
+//header
+session_start();
+$ip=$_SERVER["REMOTE_ADDR"];     //抓IP
+$link=mysqli_connect("localhost","root","","phphw2");
+mysqli_query($link, 'SET NAMES UTF8');
+$myDate=date("Y-m-d H:i:s",strtotime("+6hour"));
+
+//check if login success
+if (!empty($_SESSION["userid"])){
+	if ($_SESSION["admin"]){
+		header("location:my_account_admin.php");}
+	else {
+		header("location:my_account_user.php");}
+}
+
+if(!empty($_POST["userid"])){
+		$id=$_POST["userid"];
+		$pwd=$_POST["pwd"];	
+		$sql = "select * from my_account where userid='$id' and pwd='$pwd'";
+		$ro=mysqli_query($link,$sql);
+		$cnt=mysqli_num_rows($ro);
+		$row=mysqli_fetch_assoc($ro);
+		
+	echo	$sql;
+	if($cnt>=1){
+		echo "登入成功！";
+	//get user infromation
+		$_SESSION["userid"]=$row["userid"];
+		$_SESSION["seq"]=$roe["a_seq"];
+		$_SESSION["name"]=$row["name"];
+		$_SESSION["admin"]=$row["admin"];
+		
+		
+			//insert into login_log;
+			  $sql = "Insert into login_log values(null,'$id','$ip','$myDate',0)";
+			  mysqli_query($link,$sql);
+		//header to welcome page
+			if	($_SESSION["admin"]==1){
+				header("location:my_account_admin.php");}
+			else{
+				header("location:my_account_user.php");}	
+			}
+		else{
+
+			echo "登入失敗！帳號密碼錯誤！";
+			//insert into login_log;
+			$sql = "Inser into login_log valuse(null,'$id','$ip','$myDate',1)" ;
+			mysqli_query($link,$sql);
+			
+			//檢查此帳號IP帳密錯誤3次(5min內)
+			$blockTime= date("Y-m-d H:i:s",strtotime("+6hour-5min"));
+			$sql="select * from login_log where ll_ip='$ip' and ll_date>='".$blockTime."' order by ll_date desc limit 3";
+			$ro=mysqli_query($link,$sql);
+			//echo $sql;
+			$totcnt=0;
+			
+		while (!empty($row=mysqli_fetch_assoc($ro))){
+			$totcnt=$totcnt+$row["ll_flag"];
+			}	
+		//帳密錯誤3次則鎖定user 30min
+		
+		if ($totcnt==3){	
+			$blockNextTime=date("Y-m-d H:i:s",strtotime("+6hour+30min"));
+			$sql="insert into login_block valuse (null,'ip','myDate','".$blockNextTime."')";
+			mysqli_query($link,$sql); 
+			header("location:my_account_block.php");
+			exit();
+		}	
+	}
+}
+
+?>
 <html>
 	<head>
 		<title>Alesso music studio</title>
@@ -23,21 +96,24 @@
 									<div id="menu">
 										<ul>
 											<div class="fields">
-							<form method="post">
-								<div class="field">
-								 <iframe src="loginin.php"></iframe>
-								
-								</div>
-								<div class="field">
-							
-								</div>
-								<div class="field">
-									<ul class="actions"><br><br>
-							
-									 </ul>
-								</div>
-							</form>
-						</div>
+												<form method="post">
+													<div class="field">
+														  <label for="textfield">帳號</label>
+														  <input type="text" name="userid" id="userid" />
+													</div>
+													<div class="field">
+														  <label for="textfield2">密碼</label>
+														  <input type="password" name="pwd" id="pwd"/>
+													</div>
+													<div class="field">
+														<ul class="actions"><br><br>
+														  <li><input type="submit" name="button" id="button" value="送出"/></li>
+																																  
+														  <li><button type="button" name="nigga" id="nigga1" onclick="window.location='add.php'">註冊</button></li>
+														 </ul>
+													</div>
+												</form>
+											</div>
 										</ul>
 									</div>
 								</li>
@@ -50,10 +126,10 @@
 						<div class="inner">
 							<h2>Alesso music studio</h2>
 							
-							</p>
-							<ul class="actions special">
+							</p><br><br><br>
+							<ul class="actions special"><br><br><br>
 								
-							</ul>
+							</ul><br><br>
 						</div>
 						
 					</section>
@@ -106,7 +182,7 @@
 							
 						</ul>
 						<ul class="copyright">
-							<li></li><li>Design:李育叡</a></li>
+							<li>Design:李育叡</li>
 						</ul>
 					</footer>
 
@@ -123,3 +199,63 @@
 
 	</body>
 </html>
+<?php
+	if(!empty($_POST["userid"])){
+		$id=$_POST["userid"];
+		$pwd=$_POST["pwd"];	
+		$sql = "select * from my_account where user='$id' and pwd='$pwd'";
+		$ro=mysqli_query($link,$sql);
+		$cnt=mysqli_num_rows($ro);
+		$row=mysqli_fetch_assoc($ro);
+	
+	if($cnt>=1){
+		echo "登入成功！";
+	//get user infromation
+		$_SESSION["userid"]=$row["userid"];
+		$_SESSION["seq"]=$roe["a_seq"];
+		$_SESSION["name"]=$row["name"];
+		$_SESSION["admin"]=$row["admin"];
+		
+		
+			//insert into login_log;
+			  $sql = "Insert into login_log values(null,'$id','$ip','$myDate',0)";
+			  mysqli_query($link,$sql);
+		//header to welcome page
+			if	($_SESSION["admin"]==1){
+				header("location:my_account_admin.php");}
+			else{
+				header("location:my_account_user.php");}	
+			}
+		else{
+
+			echo "登入失敗！帳號密碼錯誤！";
+			//insert into login_log;
+			$sql = "Inser into login_log valuse(null,'$id','$ip','$myDate',1)" ;
+			mysqli_query($link,$sql);
+			
+			//檢查此帳號IP帳密錯誤3次(5min內)
+			$blockTime= date("Y-m-d H:i:s",strtotime("+6hour-5min"));
+			$sql="select * from login_log where ll_ip='$ip' and ll_date>='".$blockTime."' order by ll_date desc limit 3";
+			$ro=mysqli_query($link,$sql);
+			//echo $sql;
+			$totcnt=0;
+			
+		while (!empty($row=mysqli_fetch_assoc($ro))){
+			$totcnt=$totcnt+$row["ll_flag"];
+			}	
+		//帳密錯誤3次則鎖定user 30min
+		
+		if ($totcnt==3){	
+			$blockNextTime=date("Y-m-d H:i:s",strtotime("+6hour+30min"));
+			$sql="insert into login_block valuse (null,'ip','myDate','".$blockNextTime."')";
+			mysqli_query($link,$sql); 
+			header("location:my_account_block.php");
+			exit();
+		}	
+	}
+}
+	
+	
+	
+	
+?>
